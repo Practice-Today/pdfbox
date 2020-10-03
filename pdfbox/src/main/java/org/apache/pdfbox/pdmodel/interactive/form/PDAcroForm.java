@@ -18,7 +18,10 @@ package org.apache.pdfbox.pdmodel.interactive.form;
 
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
-
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,8 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -52,8 +58,18 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.util.Matrix;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.cos.COSString;
+//import org.apache.pdfbox.cos.COSFloat;
+//import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
+import org.apache.pdfbox.util.DatatypeConverterImpl;
+import com.ibm.icu.util.Calendar;
+import com.ibm.icu.text.SimpleDateFormat;
+
 
 /**
  * An interactive form, also known as an AcroForm.
@@ -71,6 +87,8 @@ public final class PDAcroForm implements COSObjectable
     private final COSDictionary dictionary;
     
     private Map<String, PDField> fieldCache;
+
+    final static COSString checkbox_Yes = new COSString("Yes");
 
     /**
      * Constructor.
@@ -176,7 +194,7 @@ public final class PDAcroForm implements COSObjectable
      *
      * @throws IOException If there is an error doing the import.
      */
-    public void importFDF(FDFDocument fdf) throws IOException
+    public void importFDFxxx(FDFDocument fdf) throws IOException
     {
         List<FDFField> fields = fdf.getCatalog().getFDF().getFields();
         if (fields != null)
@@ -193,6 +211,89 @@ public final class PDAcroForm implements COSObjectable
         }
     }
 
+    /**
+     * This method will import an entire FDF document into the PDF document
+     * that this acroform is part of.
+     *
+     * @param fdf The FDF document to import.
+     * @throws IOException If there is an error doing the import.
+     */
+    public void importFDF(FDFDocument fdf) throws IOException {
+        // We will replace DATE_1 with today's date
+        String todaysDate = new SimpleDateFormat("MM/dd/yyyy").format(Calendar.getInstance().getTime());
+
+        List<FDFField> fields = fdf.getCatalog().getFDF().getFields();
+        if (fields != null) {
+            for (FDFField fdfField : fields) {
+            	
+                PDField docField = getField(fdfField.getPartialFieldName());
+                if (docField != null)
+                    if (docField instanceof PDCheckBox && fdfField.getCOSValue() instanceof COSString && ((COSString) fdfField.getCOSValue()).equals(checkbox_Yes))
+                        ((PDCheckBox) docField).check();
+                    else
+					switch (docField.getCOSObject().getNameAsString(COSName.T)) {
+
+                        case "DATE_1":
+                            fdfField.setValue(todaysDate);
+                            docField.importFDF(fdfField);
+                            break;
+
+                        case "SIG_IMAGE":
+	                    PDPushButton pdPushButton = (PDPushButton) docField;
+
+	                    List<PDAnnotationWidget> widgets = pdPushButton.getWidgets();
+	                    if (widgets != null && widgets.size() > 0) {
+	                        PDAnnotationWidget annotationWidget = widgets.get(0); // just need one widget
+
+                            COSString fieldValue = (COSString) fdfField.getCOSValue();
+                            String base64String = fieldValue.getString();
+                            byte[] image = DatatypeConverterImpl.parseBase64Binary(base64String);
+
+                            ByteArrayInputStream bais = new ByteArrayInputStream(image);
+                            BufferedImage bim = ImageIO.read(bais);
+                            PDImageXObject pdImageXObject = LosslessFactory.createFromImage(document, bim);
+                            float imageScaleRatio = (float) pdImageXObject.getHeight() / (float) pdImageXObject.getWidth();
+
+                            PDRectangle buttonPosition = getFieldArea(pdPushButton);
+                            float h = buttonPosition.getHeight();
+                            float w = h / imageScaleRatio;
+                            float x = buttonPosition.getLowerLeftX();
+                            float y = buttonPosition.getLowerLeftY();
+
+                            PDAppearanceStream pdAppearanceStream = new PDAppearanceStream(document);
+                            pdAppearanceStream.setResources(new PDResources());
+                            PDPageContentStream pdPageContentStream = new PDPageContentStream(document, pdAppearanceStream);
+
+                            pdAppearanceStream.setBBox(new PDRectangle(x, y, w, h));
+
+                            PDAppearanceDictionary pdAppearanceDictionary = annotationWidget.getAppearance();
+                            if (pdAppearanceDictionary == null) {
+                                pdAppearanceDictionary = new PDAppearanceDictionary();
+                                annotationWidget.setAppearance(pdAppearanceDictionary);
+                            }
+
+                            pdAppearanceDictionary.setNormalAppearance(pdAppearanceStream);
+
+                            pdPageContentStream.drawImage(pdImageXObject, x, y, w, h);
+                            pdPageContentStream.close();
+                        }
+	                    break;
+
+                    default:
+                        docField.importFDF(fdfField);
+                        break;
+                }
+            }
+        }
+    }
+
+    private PDRectangle getFieldArea(PDField field) {
+    	  COSDictionary fieldDict = field.getCOSObject();
+    	  COSArray fieldAreaArray = (COSArray) fieldDict.getDictionaryObject(COSName.RECT);
+    	  PDRectangle result = new PDRectangle(fieldAreaArray);
+    	  return result;
+    }
+    
     /**
      * This will export all FDF form data.
      *

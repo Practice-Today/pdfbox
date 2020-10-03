@@ -43,13 +43,13 @@ public class TestFDF extends TestCase
      * @throws URISyntaxException
      * @throws IOException
      */
-    public void testLoad2() throws URISyntaxException, IOException
+    public void testLoad2() throws Exception
     {
         checkFields("/org/apache/pdfbox/pdfparser/withcatalog.fdf");
         checkFields("/org/apache/pdfbox/pdfparser/nocatalog.fdf");
     }
 
-    private void checkFields(String name) throws IOException, URISyntaxException
+    private void checkFields(String name) throws Exception
     {
         FDFDocument fdf = FDFDocument.load(new File(TestFDF.class.getResource(name).toURI()));
         fdf.saveXFDF(new PrintWriter(new ByteArrayOutputStream()));

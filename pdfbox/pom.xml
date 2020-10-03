@@ -90,6 +90,11 @@
             <artifactId>jai-imageio-jpeg2000</artifactId>
             <scope>test</scope>
         </dependency>
+		<dependency>
+		    <groupId>com.ibm.icu</groupId>
+		    <artifactId>icu4j</artifactId>
+		    <version>67.1</version>
+		</dependency>
     </dependencies>
 
     <build>
@@ -120,7 +125,8 @@
                     <systemPropertyVariables>
                         <java.util.logging.config.file>src/test/resources/logging.properties</java.util.logging.config.file>
                     </systemPropertyVariables>
-                </configuration>
+         			<skipTests>true</skipTests>
+        		</configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>

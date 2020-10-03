@@ -49,7 +49,7 @@ public class ImportXFDF
      *
      * @throws IOException If there is an error setting the data in the field.
      */
-    public void importFDF( PDDocument pdfDocument, FDFDocument fdfDocument ) throws IOException
+    public void importFDF( PDDocument pdfDocument, FDFDocument fdfDocument ) throws Exception
     {
         PDDocumentCatalog docCatalog = pdfDocument.getDocumentCatalog();
         PDAcroForm acroForm = docCatalog.getAcroForm();
@@ -66,7 +66,7 @@ public class ImportXFDF
      *
      * @throws IOException If there is an error importing the FDF document.
      */
-    public static void main(String[] args) throws IOException
+    public static void main(String[] args) throws Exception
     {
         // suppress the Dock icon on OS X
         System.setProperty("apple.awt.UIElement", "true");
@@ -75,14 +75,14 @@ public class ImportXFDF
         importer.importXFDF( args );
     }
 
-    private void importXFDF( String[] args ) throws IOException
+    private void importXFDF( String[] args ) throws Exception
     {
         PDDocument pdf = null;
         FDFDocument fdf = null;
 
         try
         {
-            if( args.length != 3 )
+            if( args.length < 3 )
             {
                 usage();
             }
@@ -91,8 +91,9 @@ public class ImportXFDF
                 ImportFDF importer = new ImportFDF();
                 pdf = PDDocument.load( new File(args[0]) );
                 fdf = FDFDocument.loadXFDF( args[1] );
+                boolean flatten = (args.length > 3) && args[3].equals("flatten");
 
-                importer.importFDF( pdf, fdf );
+                importer.importFDF( pdf, fdf, flatten );
                 pdf.save( args[2] );
             }
         }
@@ -108,7 +109,7 @@ public class ImportXFDF
      */
     private static void usage()
     {
-        System.err.println( "usage: org.apache.pdfbox.tools.ImportXFDF <pdf-file> <fdf-file> <output-file>" );
+        System.err.println( "usage: java org.apache.pdfbox.tools.ImportXFDF <pdf-file> <fdf-file> <output-file>" );
         System.exit(1);
     }
 

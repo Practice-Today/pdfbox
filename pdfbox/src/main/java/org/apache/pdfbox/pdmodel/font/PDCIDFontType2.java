@@ -43,6 +43,7 @@ import org.apache.pdfbox.util.Matrix;
 public class PDCIDFontType2 extends PDCIDFont
 {
     private static final Log LOG = LogFactory.getLog(PDCIDFontType2.class);
+    public static boolean verboseLog = false;
 
     private final TrueTypeFont ttf;
     private final int[] cid2gid;
@@ -153,7 +154,7 @@ public class PDCIDFontType2 extends PDCIDFont
         {
             ttfFont = (TrueTypeFont)mapping.getTrueTypeFont();
         }
-        if (mapping.isFallback())
+        if (verboseLog && mapping.isFallback())
         {
             LOG.warn("Using fallback font " + ttfFont.getName() + " for CID-keyed TrueType font " + getBaseFont());
         }

@@ -56,6 +56,7 @@ import static org.apache.pdfbox.pdmodel.font.UniUtil.getUniNameOfCodePoint;
 public class PDTrueTypeFont extends PDSimpleFont implements PDVectorFont
 {
     private static final Log LOG = LogFactory.getLog(PDTrueTypeFont.class);
+    public static boolean verboseLog = false;
 
     private static final int START_RANGE_F000 = 0xF000;
     private static final int START_RANGE_F100 = 0xF100;
@@ -215,7 +216,7 @@ public class PDTrueTypeFont extends PDSimpleFont implements PDVectorFont
                                                                             getFontDescriptor());
             ttfFont = mapping.getFont();
 
-            if (mapping.isFallback())
+            if (verboseLog && mapping.isFallback())
             {
                 LOG.warn("Using fallback font '" + ttfFont + "' for '" + getBaseFont() + "'");
             }

@@ -53,6 +53,7 @@ import static org.apache.pdfbox.pdmodel.font.UniUtil.getUniNameOfCodePoint;
 public class PDType1CFont extends PDSimpleFont
 {
     private static final Log LOG = LogFactory.getLog(PDType1CFont.class);
+    public static boolean verboseLog = false;
 
     private final Map<String, Float> glyphHeights = new HashMap<String, Float>();
     private Float avgWidth = null;
@@ -121,7 +122,7 @@ public class PDType1CFont extends PDSimpleFont
                                                           .getFontBoxFont(getBaseFont(), fd);
             genericFont = mapping.getFont();
             
-            if (mapping.isFallback())
+            if (verboseLog && mapping.isFallback())
             {
                 LOG.warn("Using fallback font " + genericFont.getName() + " for " + getBaseFont());
             }

@@ -58,6 +58,7 @@ import org.apache.pdfbox.pdmodel.font.encoding.ZapfDingbatsEncoding;
 public class PDType1Font extends PDSimpleFont
 {
     private static final Log LOG = LogFactory.getLog(PDType1Font.class);
+    public static boolean verboseLog = false;
 
     // alternative names for glyphs which are commonly encountered
     private static final Map<String, String> ALT_NAMES = new HashMap<String, String>();
@@ -147,7 +148,7 @@ public class PDType1Font extends PDSimpleFont
                                                                       getFontDescriptor());
         genericFont = mapping.getFont();
         
-        if (mapping.isFallback())
+        if (verboseLog && mapping.isFallback())
         {
             String fontName;
             try
@@ -282,7 +283,7 @@ public class PDType1Font extends PDSimpleFont
                                                           .getFontBoxFont(getBaseFont(), fd);
             genericFont = mapping.getFont();
             
-            if (mapping.isFallback())
+            if (verboseLog && mapping.isFallback())
             {
                 LOG.warn("Using fallback font " + genericFont.getName() + " for " + getBaseFont());
             }

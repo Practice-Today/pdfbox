@@ -84,7 +84,7 @@ public class ImportXFDF
         {
             if( args.length < 3 )
             {
-                usage();
+                usage(args);
             }
             else
             {
@@ -104,12 +104,11 @@ public class ImportXFDF
         }
     }
 
-    /**
-     * This will print out a message telling how to use this example.
-     */
-    private static void usage()
+    private static void usage(String args[])
     {
-        System.err.println( "usage: java org.apache.pdfbox.tools.ImportXFDF <pdf-file> <fdf-file> <output-file>" );
+    	String crlf = System.getProperty("line.separator");
+        String message = "Usage: java -jar " + Version.getJarName(Convert.class) + " ImportXFDF <pdf-file> <fdf-file> <output-file>" + crlf;
+        System.err.println(message);
         System.exit(1);
     }
 

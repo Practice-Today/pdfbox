@@ -26,9 +26,7 @@ import org.apache.pdfbox.debugger.PDFDebugger;
  */
 public final class PDFBox 
 {
-    private PDFBox()
-    {
-    }
+    private PDFBox() { }
     
     /**
      * Main method.
@@ -100,6 +98,14 @@ public final class PDFBox
             {
                 WriteDecodedDoc.main(arguments);
             }
+            else if (command.equals("ImportXFDF"))
+            {
+            	ImportXFDF.main(arguments);
+            }
+            else if (command.equals("Convert"))
+            {
+            	Convert.main(arguments);
+            }
             else
             {
                 showMessageAndExit();
@@ -120,10 +126,12 @@ public final class PDFBox
         String message = "PDFBox version: \""+ Version.getVersion()+ "\""
                 + "\nUsage: java -jar pdfbox-app-x.y.z.jar <command> <args..>\n"
                 + "\nPossible commands are:\n"
+                + "  Convert\n"
                 + "  Decrypt\n"
                 + "  Encrypt\n"
                 + "  ExtractText\n"
                 + "  ExtractImages\n"
+                + "  ImportXFDF\n"
                 + "  OverlayPDF\n"
                 + "  PrintPDF\n"
                 + "  PDFDebugger\n"

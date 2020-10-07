@@ -63,6 +63,14 @@ final class Version
         }
         System.out.println( "Version:" + getVersion() );
     }
+    
+    public static String getJarName(Class<?> clazz) {
+    	return new java.io.File(clazz.getProtectionDomain()
+  			  .getCodeSource()
+  			  .getLocation()
+  			  .getPath())
+  			  .getName();
+    }
 
     /**
      * This will print out a message telling how to use this example.

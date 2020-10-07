@@ -20,8 +20,6 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,12 +29,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.imageio.ImageIO;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -64,12 +61,8 @@ import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.cos.COSString;
-//import org.apache.pdfbox.cos.COSFloat;
-//import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
 import org.apache.pdfbox.util.DatatypeConverterImpl;
-import com.ibm.icu.util.Calendar;
-import com.ibm.icu.text.SimpleDateFormat;
-
+import javax.imageio.ImageIO;
 
 /**
  * An interactive form, also known as an AcroForm.
@@ -239,6 +232,7 @@ public final class PDAcroForm implements COSObjectable
                             break;
 
                         case "SIG_IMAGE":
+                        case "SIGNATURE":
 	                    PDPushButton pdPushButton = (PDPushButton) docField;
 
 	                    List<PDAnnotationWidget> widgets = pdPushButton.getWidgets();

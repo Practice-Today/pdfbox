@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 
@@ -39,6 +40,7 @@ import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSNumber;
+import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -58,11 +60,16 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.util.Matrix;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.util.DatatypeConverterImpl;
+import org.apache.pdfbox.util.DateConverter;
+
 import javax.imageio.ImageIO;
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * An interactive form, also known as an AcroForm.
@@ -214,7 +221,8 @@ public final class PDAcroForm implements COSObjectable
     public void importFDF(FDFDocument fdf) throws IOException {
         // We will replace DATE_1 with today's date
         String todaysDate = new SimpleDateFormat("MM/dd/yyyy").format(Calendar.getInstance().getTime());
-
+        Calendar today = DateConverter.toCalendar(todaysDate);
+        
         List<FDFField> fields = fdf.getCatalog().getFDF().getFields();
         if (fields != null) {
             for (FDFField fdfField : fields) {
@@ -223,12 +231,15 @@ public final class PDAcroForm implements COSObjectable
                 if (docField != null)
                     if (docField instanceof PDCheckBox && fdfField.getCOSValue() instanceof COSString && ((COSString) fdfField.getCOSValue()).equals(checkbox_Yes))
                         ((PDCheckBox) docField).check();
-                    else
+                    else {
 					switch (docField.getCOSObject().getNameAsString(COSName.T)) {
 
                         case "DATE_1":
                             fdfField.setValue(todaysDate);
+                        case "PAT_31":
                             docField.importFDF(fdfField);
+                            docField.getCOSObject().removeItem(COSName.AA);
+                            docField.getCOSObject().setNeedToBeUpdated(true);
                             break;
 
                         case "SIG_IMAGE":
@@ -251,7 +262,8 @@ public final class PDAcroForm implements COSObjectable
                             PDRectangle buttonPosition = getFieldArea(pdPushButton);
                             float h = buttonPosition.getHeight();
                             float w = h / imageScaleRatio;
-                            float x = buttonPosition.getLowerLeftX();
+                            float fudge = -300; //TODO FIXME Don't know why flattening moves the signature.
+                            float x = 0;//buttonPosition.getLowerLeftX() + fudge;
                             float y = buttonPosition.getLowerLeftY();
 
                             PDAppearanceStream pdAppearanceStream = new PDAppearanceStream(document);
@@ -271,11 +283,14 @@ public final class PDAcroForm implements COSObjectable
                             pdPageContentStream.drawImage(pdImageXObject, x, y, w, h);
                             pdPageContentStream.close();
                         }
+	    	            docField.getCOSObject().setNeedToBeUpdated(true);
 	                    break;
 
                     default:
                         docField.importFDF(fdfField);
+        	            docField.getCOSObject().setNeedToBeUpdated(true);
                         break;
+                }
                 }
             }
         }
@@ -330,8 +345,9 @@ public final class PDAcroForm implements COSObjectable
      * 
      * @throws IOException 
      */
-    public void flatten() throws IOException
-    {
+    public void flatten() throws IOException { flatten(false); }
+    public void flatten(boolean needsAppearance) throws IOException
+        {
         // for dynamic XFA forms there is no flatten as this would mean to do a rendering
         // from the XFA content into a static PDF.
         if (xfaIsDynamic())
@@ -345,7 +361,7 @@ public final class PDAcroForm implements COSObjectable
         {
             fields.add(field);
         }
-        flatten(fields, false);
+        flatten(fields, needsAppearance);
     }
     
     
@@ -903,6 +919,11 @@ public final class PDAcroForm implements COSObjectable
     {
         for (PDField field : fields)
         {
+    		if (null != field.getCOSObject().getItem(COSName.AA) ) {
+        		field.getCOSObject().removeItem(COSName.AA);
+        		field.getCOSObject().setNeedToBeUpdated(true);
+        	}
+
             COSArray array;
             if (field.getParent() == null)
             {

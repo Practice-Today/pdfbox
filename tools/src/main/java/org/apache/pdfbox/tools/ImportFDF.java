@@ -58,10 +58,11 @@ public class ImportFDF
         }
         acroForm.setCacheFields( true );
         acroForm.importFDF( fdfDocument );
-        if ( flatten )
-        	acroForm.flatten();
+        if ( flatten ) {
+        	acroForm.setNeedAppearances(true);
+        	acroForm.flatten(true);
+    	}
 
-        
         //TODO this can be removed when we create appearance streams
         acroForm.setNeedAppearances(true);
     }

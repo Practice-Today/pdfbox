@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 
@@ -60,16 +59,12 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.util.Matrix;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.util.DatatypeConverterImpl;
-import org.apache.pdfbox.util.DateConverter;
 
 import javax.imageio.ImageIO;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * An interactive form, also known as an AcroForm.
@@ -221,8 +216,7 @@ public final class PDAcroForm implements COSObjectable
     public void importFDF(FDFDocument fdf) throws IOException {
         // We will replace DATE_1 with today's date
         String todaysDate = new SimpleDateFormat("MM/dd/yyyy").format(Calendar.getInstance().getTime());
-        Calendar today = DateConverter.toCalendar(todaysDate);
-        
+       
         List<FDFField> fields = fdf.getCatalog().getFDF().getFields();
         if (fields != null) {
             for (FDFField fdfField : fields) {
@@ -243,12 +237,10 @@ public final class PDAcroForm implements COSObjectable
                             break;
 
                         case "SIG_IMAGE":
-                        case "SIGNATURE":
 	                    PDPushButton pdPushButton = (PDPushButton) docField;
 
-	                    List<PDAnnotationWidget> widgets = pdPushButton.getWidgets();
-	                    if (widgets != null && widgets.size() > 0) {
-	                        PDAnnotationWidget annotationWidget = widgets.get(0); // just need one widget
+	                    for (PDAnnotationWidget widget: pdPushButton.getWidgets()) {
+	                        //PDAnnotationWidget annotationWidget = widgets.get(0); // just need one widget
 
                             COSString fieldValue = (COSString) fdfField.getCOSValue();
                             String base64String = fieldValue.getString();
@@ -257,31 +249,13 @@ public final class PDAcroForm implements COSObjectable
                             ByteArrayInputStream bais = new ByteArrayInputStream(image);
                             BufferedImage bim = ImageIO.read(bais);
                             PDImageXObject pdImageXObject = LosslessFactory.createFromImage(document, bim);
-                            float imageScaleRatio = (float) pdImageXObject.getHeight() / (float) pdImageXObject.getWidth();
-
-                            PDRectangle buttonPosition = getFieldArea(pdPushButton);
-                            float h = buttonPosition.getHeight();
-                            float w = h / imageScaleRatio;
-                            float fudge = -300; //TODO FIXME Don't know why flattening moves the signature.
-                            float x = 0;//buttonPosition.getLowerLeftX() + fudge;
-                            float y = buttonPosition.getLowerLeftY();
-
-                            PDAppearanceStream pdAppearanceStream = new PDAppearanceStream(document);
-                            pdAppearanceStream.setResources(new PDResources());
-                            PDPageContentStream pdPageContentStream = new PDPageContentStream(document, pdAppearanceStream);
-
-                            pdAppearanceStream.setBBox(new PDRectangle(x, y, w, h));
-
-                            PDAppearanceDictionary pdAppearanceDictionary = annotationWidget.getAppearance();
-                            if (pdAppearanceDictionary == null) {
-                                pdAppearanceDictionary = new PDAppearanceDictionary();
-                                annotationWidget.setAppearance(pdAppearanceDictionary);
-                            }
-
-                            pdAppearanceDictionary.setNormalAppearance(pdAppearanceStream);
-
-                            pdPageContentStream.drawImage(pdImageXObject, x, y, w, h);
-                            pdPageContentStream.close();
+	                    	
+                            // Only PDFBOX authors know why widgets contain rectangles for all other widgets by the same Tag.
+                        	PDRectangle rect = getRectangles(pdPushButton).get(0);
+                            bais = new ByteArrayInputStream(image);
+                            bim = ImageIO.read(bais);
+                            pdImageXObject = LosslessFactory.createFromImage(document, bim);
+                    		plantSignature(pdPushButton, rect, pdImageXObject, widget);
                         }
 	    	            docField.getCOSObject().setNeedToBeUpdated(true);
 	                    break;
@@ -296,11 +270,49 @@ public final class PDAcroForm implements COSObjectable
         }
     }
 
-    private PDRectangle getFieldArea(PDField field) {
-    	  COSDictionary fieldDict = field.getCOSObject();
-    	  COSArray fieldAreaArray = (COSArray) fieldDict.getDictionaryObject(COSName.RECT);
-    	  PDRectangle result = new PDRectangle(fieldAreaArray);
-    	  return result;
+    private void plantSignature(PDField field, PDRectangle buttonPosition, PDImageXObject pdImageXObject, PDAnnotationWidget widget) throws IOException {
+        float imageScaleRatio = (float) pdImageXObject.getHeight() / (float) pdImageXObject.getWidth();
+
+        float h = buttonPosition.getHeight();
+        float w = h / imageScaleRatio;
+        float x = buttonPosition.getLowerLeftX();
+        float y = buttonPosition.getLowerLeftY();
+
+        PDAppearanceStream pdAppearanceStream = new PDAppearanceStream(document);
+        pdAppearanceStream.setResources(new PDResources());
+        PDPageContentStream pdPageContentStream = new PDPageContentStream(document, pdAppearanceStream);
+
+        // x=0 is a kludge to fix an apparent bug in PDFBOX's rendering of this image;
+        // without x=0, the SIG_IMAGE is placed radically to the left of its proper position.
+        pdAppearanceStream.setBBox(new PDRectangle(/*x*/0, y, w, h));
+
+        PDAppearanceDictionary pdAppearanceDictionary = widget.getAppearance();
+        if (pdAppearanceDictionary == null) {
+            pdAppearanceDictionary = new PDAppearanceDictionary();
+            widget.setAppearance(pdAppearanceDictionary);
+        }
+
+        pdAppearanceDictionary.setNormalAppearance(pdAppearanceStream);
+
+        // x=0 see pdAppearanceStream.setBBox comment, above
+        pdPageContentStream.drawImage(pdImageXObject, /*x*/0, y, w, h);
+        pdPageContentStream.close();
+    }
+
+    private List<PDRectangle> getRectangles(PDField field) {
+    	COSDictionary fieldDict = field.getCOSObject();
+    	COSArray rect = (COSArray) fieldDict.getDictionaryObject(COSName.RECT);
+    	List<PDRectangle> result = new ArrayList<PDRectangle>();
+    	if ( rect != null ) {
+        	result.add(new PDRectangle(rect));	
+    	} else {
+    		for (COSBase kid: (COSArray)fieldDict.getItem(COSName.KIDS)) {
+    			COSObject kidObj = (COSObject) kid.getCOSObject();
+    			rect = (COSArray) kidObj.getDictionaryObject(COSName.RECT);
+    			result.add(new PDRectangle(rect));
+    		}
+    	}
+    	return result;
     }
     
     /**

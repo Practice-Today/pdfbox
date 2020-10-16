@@ -240,7 +240,6 @@ public final class PDAcroForm implements COSObjectable
 	                    PDPushButton pdPushButton = (PDPushButton) docField;
 
 	                    for (PDAnnotationWidget widget: pdPushButton.getWidgets()) {
-	                        //PDAnnotationWidget annotationWidget = widgets.get(0); // just need one widget
 
                             COSString fieldValue = (COSString) fdfField.getCOSValue();
                             String base64String = fieldValue.getString();
@@ -248,14 +247,11 @@ public final class PDAcroForm implements COSObjectable
 
                             ByteArrayInputStream bais = new ByteArrayInputStream(image);
                             BufferedImage bim = ImageIO.read(bais);
+                            if (bim == null)
+                            	throw new IllegalArgumentException("ImageIO.read(bais) has no serviceProvider that can read the SIG_IMAGE deserialized image.");
                             PDImageXObject pdImageXObject = LosslessFactory.createFromImage(document, bim);
 	                    	
-                            // Only PDFBOX authors know why widgets contain rectangles for all other widgets by the same Tag.
-                        	PDRectangle rect = getRectangles(pdPushButton).get(0);
-                            bais = new ByteArrayInputStream(image);
-                            bim = ImageIO.read(bais);
-                            pdImageXObject = LosslessFactory.createFromImage(document, bim);
-                    		plantSignature(pdPushButton, rect, pdImageXObject, widget);
+                    		plantSignature(pdPushButton, getRectangles(pdPushButton).get(0), pdImageXObject, widget);
                         }
 	    	            docField.getCOSObject().setNeedToBeUpdated(true);
 	                    break;

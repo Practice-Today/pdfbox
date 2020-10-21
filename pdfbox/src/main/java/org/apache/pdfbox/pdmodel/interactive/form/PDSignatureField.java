@@ -39,6 +39,7 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 public class PDSignatureField extends PDTerminalField
 {
 	private static final Log LOG = LogFactory.getLog(PDSignatureField.class);
+	public static boolean verboseLog = false;
 	
     /**
      * @see PDTerminalField#PDTerminalField(PDAcroForm)
@@ -234,7 +235,8 @@ public class PDSignatureField extends PDTerminalField
             }
 
             // TODO: implement appearance generation for signatures (PDFBOX-3524)
-            LOG.warn("Appearance generation for signature fields not implemented here. "
+            if (verboseLog)
+            	LOG.warn("Appearance generation for signature fields not implemented here. "
                     + "You need to generate/update that manually, see the "
                     + "CreateVisibleSignature*.java files in the examples subproject "
                     + "of the source code download");

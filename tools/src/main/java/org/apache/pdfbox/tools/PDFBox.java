@@ -106,6 +106,10 @@ public final class PDFBox
             {
             	Convert.main(arguments);
             }
+            else if (command.equals("Flatten"))
+            {
+            	Flatten.main(arguments);
+            }
             else
             {
                 showMessageAndExit();
@@ -131,6 +135,7 @@ public final class PDFBox
                 + "  Encrypt\n"
                 + "  ExtractText\n"
                 + "  ExtractImages\n"
+                + "  Flatten\n"
                 + "  ImportXFDF\n"
                 + "  OverlayPDF\n"
                 + "  PrintPDF\n"

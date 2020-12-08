@@ -39,100 +39,59 @@ public final class PDFBox
         // suppress the Dock icon on OS X
         System.setProperty("apple.awt.UIElement", "true");
 
-        if (args.length > 0) 
-        {
-            String command = args[0];
-            String[] arguments = new String[args.length - 1];
-            System.arraycopy(args, 1, arguments, 0, arguments.length);
-            boolean exitAfterCallingMain = true;
-            if (command.equals("Decrypt"))
-            {
-                Decrypt.main(arguments);
-            }
-            else if (command.equals("Encrypt"))
-            {
-                Encrypt.main(arguments);
-            }
-            else if (command.equals("ExtractText"))
-            {
-                ExtractText.main(arguments);
-            }
-            else if (command.equals("ExtractImages"))
-            {
-                ExtractImages.main(arguments);
-            }
-            else if (command.equals("OverlayPDF"))
-            {
-                OverlayPDF.main(arguments);
-            }
-            else if (command.equals("PrintPDF"))
-            {
-                PrintPDF.main(arguments);
-            }
-            else if (command.equals("PDFDebugger") || command.equals("PDFReader"))
-            {
-                PDFDebugger.main(arguments);
-                exitAfterCallingMain = false;
-            }
-            else if (command.equals("PDFMerger"))
-            {
-                PDFMerger.main(arguments);
-            }
-            else if (command.equals("PDFSplit"))
-            {
-                PDFSplit.main(arguments);
-            }
-            else if (command.equals("PDFToImage"))
-            {
-                PDFToImage.main(arguments);
-            }
-            else if (command.equals("ImageToPDF"))
-            {
-                ImageToPDF.main(arguments);
-            }
-            else if (command.equals("TextToPDF"))
-            {
-                TextToPDF.main(arguments);
-            }
-            else if (command.equals("WriteDecodedDoc"))
-            {
-                WriteDecodedDoc.main(arguments);
-            }
-            else if (command.equals("ImportXFDF"))
-            {
-            	ImportXFDF.main(arguments);
-            }
-            else if (command.equals("Convert"))
-            {
-            	Convert.main(arguments);
-            }
-            else if (command.equals("Flatten"))
-            {
-            	Flatten.main(arguments);
-            }
-            else
-            {
-                showMessageAndExit();
-            }
-            if (exitAfterCallingMain)
-            {
-                System.exit(0);
-            }
+        if (args.length == 0) { showMessageAndExit(); }
+
+        String command = args[0];
+        String[] arguments = new String[args.length - 1];
+        System.arraycopy(args, 1, arguments, 0, arguments.length);
+        boolean exitAfterCallingMain = true;
+        
+        switch ( command ) {
+            case "Decrypt": Decrypt.main(arguments); break;
+            case "Encrypt": Encrypt.main(arguments); break;
+            case "ExtractText": ExtractText.main(arguments); break;
+            case "ExtractImages": ExtractImages.main(arguments); break;
+            case "OverlayPDF": OverlayPDF.main(arguments); break;
+            case "PrintPDF": PrintPDF.main(arguments); break;
+            case "PDFDebugger":
+            case "PDFReader": PDFDebugger.main(arguments);
+            				  exitAfterCallingMain = false; break;
+            case "PDFMerger": PDFMerger.main(arguments); break;
+            case "PDFSplit": PDFSplit.main(arguments); break;
+            case "PDFToImage": PDFToImage.main(arguments); break;
+            case "ImageToPDF": ImageToPDF.main(arguments); break;
+            case "TextToPDF": TextToPDF.main(arguments); break;
+            case "WriteDecodedDoc": WriteDecodedDoc.main(arguments); break;
+            case "ImportXFDF":ImportXFDF.main(arguments); break;
+            case "Convert":Convert.main(arguments); break;
+            case "Flatten":Flatten.main(arguments); break;
+            case "E2EGenKeys": E2EGenKeys.main(arguments); break;
+            case "E2EDecrypt": E2EDecrypt.main(arguments); break;
+            case "E2EEncrypt": E2EEncrypt.main(arguments); break;
+            default: showMessageAndExit(); break;
         }
-        else 
+        
+        if (exitAfterCallingMain)
         {
-            showMessageAndExit();
+            System.exit(0);
         }
     }
+
 
     private static void showMessageAndExit() 
     {
         String message = "PDFBox version: \""+ Version.getVersion()+ "\""
                 + "\nUsage: java -jar pdfbox-app-x.y.z.jar <command> <args..>\n"
                 + "\nPossible commands are:\n"
+                + "  \n"
                 + "  Convert\n"
                 + "  Decrypt\n"
                 + "  Encrypt\n"
+                + "  \n"
+                + "  E2EGenKeys\n"
+                + "  E2EDecrypt\n"
+                + "  E2EEncrypt\n"
+                + "  \n"
                 + "  ExtractText\n"
                 + "  ExtractImages\n"
                 + "  Flatten\n"
@@ -145,7 +104,7 @@ public final class PDFBox
                 + "  PDFSplit\n"
                 + "  PDFToImage\n"
                 + "  TextToPDF\n"
-                + "  WriteDecodedDoc";
+                + "  WriteDecodedDoc\n";
         
         System.err.println(message);
         System.exit(1);

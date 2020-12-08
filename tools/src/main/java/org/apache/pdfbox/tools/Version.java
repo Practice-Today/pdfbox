@@ -16,6 +16,9 @@
  */
 package org.apache.pdfbox.tools;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandles.Lookup;
+
 /**
  * A simple command line utility to get the version of PDFBox.
  *
@@ -70,6 +73,10 @@ final class Version
   			  .getLocation()
   			  .getPath())
   			  .getName();
+    }
+
+    public static String getClassName(Lookup lookup) {
+    	return lookup.lookupClass().getSimpleName();
     }
 
     /**

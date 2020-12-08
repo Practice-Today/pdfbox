@@ -36,13 +36,14 @@
     This artefact contains commandline tools using Apache PDFBox.
   </description>
   <inceptionYear>2002</inceptionYear>
-
+  
+  <properties>
+      <bouncycastle.version>1.59</bouncycastle.version>
+      <bouncygpg.version>2.1.0</bouncygpg.version>
+  </properties>
+  
   <dependencies>
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcmail-jdk15on</artifactId>
-      <optional>true</optional>
-    </dependency>
+
     <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>pdfbox-debugger</artifactId>
@@ -76,7 +77,20 @@
         <artifactId>jai-imageio-jpeg2000</artifactId>
         <scope>test</scope>
     </dependency>
+	<dependency>
+	    <groupId>commons-codec</groupId>
+	    <artifactId>commons-codec</artifactId>
+	    <version>1.15</version>
+	</dependency>
+
+    <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpg-jdk15on</artifactId>
+        <version>${bouncycastle.version}</version>
+    </dependency>
+        
   </dependencies>
+
 
   <build>
     <resources>

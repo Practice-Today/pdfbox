@@ -48,11 +48,6 @@ public class E2EDecrypt
         File inpFile = new File(args[0]);
         File outFile = new File(args[1]);
 
-        
-        
-        
-        
-        
         char passwd[] = (args.length==4)?args[3].toCharArray():(new String("f5JtBxh7ZwwszuYHZo9")).toCharArray();
         InputStream keyIn = (args[2].startsWith("-----BEGIN"))
         		? new ByteArrayInputStream(args[2].getBytes())

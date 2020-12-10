@@ -4,7 +4,6 @@ package org.apache.pdfbox.tools.encrypt;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,12 +11,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.util.Iterator;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
@@ -114,7 +111,7 @@ public class KeyBasedFileProcessor
             {
                 pbe = (PGPPublicKeyEncryptedData)it.next();
                 
-                sKey = PGPExampleUtil.findSecretKey(pgpSec, pbe.getKeyID(), passwd);
+                sKey = PGPUtilEx.findSecretKey(pgpSec, pbe.getKeyID(), passwd);
             }
             
             if (sKey == null)
@@ -199,7 +196,7 @@ public class KeyBasedFileProcessor
         throws IOException, NoSuchProviderException, PGPException
     {
         OutputStream out = new BufferedOutputStream(new FileOutputStream(outputFileName));
-        PGPPublicKey encKey = PGPExampleUtil.readPublicKey(keyIn);
+        PGPPublicKey encKey = PGPUtilEx.readPublicKey(keyIn);
         encryptFile(out, inputFileName, encKey, armor, withIntegrityCheck);
         out.close();
     }
@@ -219,7 +216,7 @@ public class KeyBasedFileProcessor
 
         try
         {
-            byte[] bytes = PGPExampleUtil.compressFile(fileName, CompressionAlgorithmTags.ZIP);
+            byte[] bytes = PGPUtilEx.compressFile(fileName, CompressionAlgorithmTags.ZIP);
 
             PGPEncryptedDataGenerator encGen = new PGPEncryptedDataGenerator(
                 new JcePGPDataEncryptorBuilder(PGPEncryptedData.CAST5).setWithIntegrityPacket(withIntegrityCheck).setSecureRandom(new SecureRandom()).setProvider("BC"));

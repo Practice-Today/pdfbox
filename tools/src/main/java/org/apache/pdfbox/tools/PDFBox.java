@@ -47,7 +47,8 @@ public final class PDFBox
         boolean exitAfterCallingMain = true;
         
         switch ( command ) {
-            case "Decrypt": Decrypt.main(arguments); break;
+        	case "CURL": CURL.main(arguments); break;
+        	case "Decrypt": Decrypt.main(arguments); break;
             case "Encrypt": Encrypt.main(arguments); break;
             case "ExtractText": ExtractText.main(arguments); break;
             case "ExtractImages": ExtractImages.main(arguments); break;
